@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistemas Operativos Trifásicos</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            color: #333;
+        }
+        h1 {
+            color: #f39c12;
+            text-align: center;
+        }
+        .container {
+            width: 70%;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #fff;
+            box-shadow: 0px 0px 10px rgba(0,0,0,0.1);
+            border-radius: 10px;
+        }
+        .btn {
+            background-color: #e67e22;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 5px;
+        }
+        .btn:hover {
+            background-color: #d35400;
+        }
+        .trabajo {
+            background-color: #ecf0f1;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+            box-shadow: 0 0 5px rgba(0,0,0,0.1);
+        }
+        .trabajo a {
+            text-decoration: none;
+            color: #2ecc71;
+            font-weight: bold;
+        }
+        .trabajo a:hover {
+            color: #27ae60;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Sistemas Operativos Trifásicos</h1>
+        
+        <!-- Opciones de acceso -->
+        <div id="opcionesAcceso">
+            <button class="btn" onclick="entrarComo('maestro')">Entrar como Maestro</button>
+            <button class="btn" onclick="entrarComo('alumno')">Entrar como Alumno</button>
+        </div>
+
+        <!-- Formulario de contraseña para Alumno -->
+        <div id="accesoAlumno" style="display: none;">
+            <p>Por favor, ingresa la contraseña para continuar:</p>
+            <input type="password" id="password" placeholder="Contraseña" style="width: 100%; padding: 10px; margin-bottom: 20px;">
+            <button class="btn" onclick="validarAccesoAlumno()">Entrar como Alumno</button>
+        </div>
+
+        <!-- Menu de Alumno -->
+        <div id="menuAlumno" style="display: none;">
+            <h2>Subir Trabajos como Alumno</h2>
+            <input type="file" id="file" accept=".pdf,.doc,.docx,.xlsx,.txt">
+            <button class="btn" onclick="subirArchivo()">Ingresar Archivo Guardado</button>
+            
+            <br><br>
+            <input type="text" id="link" placeholder="Introduce el link aquí" style="width: 70%; padding: 10px;">
+            <button class="btn" onclick="subirLink()">Ingresar Link</button>
+
+            <button class="btn" onclick="regresar()">Regresar a la Página Principal</button>
+            <hr>
+            <h3>Trabajos Subidos:</h3>
+            <div id="trabajosSubidos"></div>
+        </div>
+
+        <!-- Menu de Maestro -->
+        <div id="menuMaestro" style="display: none;">
+            <h2>Trabajos Publicados por los Alumnos</h2>
+            <div id="trabajosAlumnos"></div>
+            <button class="btn" onclick="regresar()">Regresar al Inicio</button>
+        </div>
+    </div>
+
+    <script>
+        let trabajos = JSON.parse(localStorage.getItem('trabajos')) || [];
+
+        function entrarComo(tipo) {
+            document.getElementById('opcionesAcceso').style.display = 'none';
+            if (tipo === 'maestro') {
+                mostrarMenuMaestro();
+            } else {
+                document.getElementById('accesoAlumno').style.display = 'block';
+            }
+        }
+
+        function validarAccesoAlumno() {
+            const password = document.getElementById('password').value;
+            if (password === 'salmon') {
+                document.getElementById('accesoAlumno').style.display = 'none';
+                document.getElementById('menuAlumno').style.display = 'block';
+                mostrarTrabajosSubidos();
+            } else {
+                alert('Contraseña incorrecta');
+            }
+        }
+
+        function subirArchivo() {
+            const archivo = document.getElementById('file').files[0];
+            if (archivo) {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    const trabajo = { tipo: "archivo", nombre: archivo.name, url: event.target.result };
+                    trabajos.push(trabajo);
+                    localStorage.setItem('trabajos', JSON.stringify(trabajos));
+                    mostrarTrabajosSubidos();
+                };
+                reader.readAsDataURL(archivo);
+            } else {
+                alert('Por favor, selecciona un archivo.');
+            }
+        }
+
+        function subirLink() {
+            const link = document.getElementById('link').value;
+            if (link.trim() !== "") {
+                const trabajo = { tipo: "link", link: link };
+                trabajos.push(trabajo);
+                localStorage.setItem('trabajos', JSON.stringify(trabajos));
+                mostrarTrabajosSubidos();
+            } else {
+                alert('Por favor, introduce un link.');
+            }
+        }
+
+        function mostrarTrabajosSubidos() {
+            let trabajosHTML = '';
+            trabajos.forEach((trabajo, index) => {
+                if (trabajo.tipo === "archivo") {
+                    trabajosHTML += `
+                        <div class="trabajo">
+                            <p>Archivo: <a href="${trabajo.url}" target="_blank">${trabajo.nombre}</a></p>
+                            <button class="btn" onclick="eliminarTrabajo(${index})">Eliminar</button>
+                        </div>
+                    `;
+                } else if (trabajo.tipo === "link") {
+                    trabajosHTML += `
+                        <div class="trabajo">
+                            <p>Link: <a href="${trabajo.link}" target="_blank">${trabajo.link}</a></p>
+                            <button class="btn" onclick="eliminarTrabajo(${index})">Eliminar</button>
+                        </div>
+                    `;
+                }
+            });
+            document.getElementById('trabajosSubidos').innerHTML = trabajosHTML;
+        }
+
+        function eliminarTrabajo(index) {
+            trabajos.splice(index, 1);
+            localStorage.setItem('trabajos', JSON.stringify(trabajos));
+            mostrarTrabajosSubidos();
+        }
+
+        function mostrarMenuMaestro() {
+            document.getElementById('menuMaestro').style.display = 'block';
+            mostrarTrabajos();
+        }
+
+        function mostrarTrabajos() {
+            let trabajosHTML = trabajos.map(trabajo => {
+                return trabajo.tipo === "archivo" ?
+                    `<div class="trabajo"><p>Archivo: <a href="${trabajo.url}" target="_blank">${trabajo.nombre}</a></p></div>` :
+                    `<div class="trabajo"><p>Link: <a href="${trabajo.link}" target="_blank">${trabajo.link}</a></p></div>`;
+            }).join('');
+            document.getElementById('trabajosAlumnos').innerHTML = trabajosHTML || "No hay trabajos publicados aún.";
+        }
+
+        function regresar() {
+            location.reload();
+        }
+    </script>
+</body>
+</html>
